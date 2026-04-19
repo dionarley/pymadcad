@@ -1,0 +1,57 @@
+version: "3.8"
+
+services:
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: pymadcad-dev:latest
+    container_name: pymadcad-dev
+    volumes:
+      - .:/home/dnly/stage/madcad:cached
+    environment:
+      - DISPLAY=${DISPLAY}
+      - PYTHONDONTWRITEBYTECODE=1
+      - Maturin_FEATURE_FLAGS=--release
+    shm_size: 2g
+
+  test-headless:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: pymadcad-dev:latest
+    container_name: pymadcad-test
+    volumes:
+      - .:/home/dnly/stage/madcad:cached
+    environment:
+      - DISPLAY=:99
+      - LIBGL_ALWAYS_SOFTWARE=1
+    depends_on:
+      - xvfb
+    command: >
+      sh -c "Xvfb :99 -screen 0 1920x1080x24 &
+             sleep 2 &&
+             pytest tests/ -v"
+    entrypoint: []
+
+  xvfb:
+    image: xorg/xserver:latest
+    container_name: pymadcad-xvfb
+    environment:
+      - DISPLAY=:99
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix
+    command: Xvfb :99 -screen 0 1920x1080x24 -ac +extension GLX +render -noreset
+
+  shell:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: pymadcad-dev:latest
+    container_name: pymadcad-shell
+    volumes:
+      - .:/home/dnly/stage/madcad:cached
+    tty: true
+    stdin_open: true
+    command: bash
+    entrypoint: []
