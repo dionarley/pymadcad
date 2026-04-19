@@ -20,15 +20,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libglfw3-dev \
     pkg-config \
     libssl-dev \
+    xvfb \
     && rm -rf /var/lib/apt/lists/*
 
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 ENV PATH="/root/.cargo/bin:${PATH}"
 
-COPY pyproject.toml .
+COPY pyproject.toml Cargo.toml ./
 RUN pip install --root-user-action=ignore maturin pytest
 
-RUN maturin fetch
-RUN pip install pytest~=9.0 pyside6 pyqt6
+RUN maturin fetch --python python3
 
 CMD ["bash"]
